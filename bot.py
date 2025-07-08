@@ -39,7 +39,7 @@ async def on_ready():
     print(f"toy listo, {bot.user.name} \n ------------")
 
 async def main():
-    await bot.load_extension("gpt_chat")
+    await bot.load_extension("mistralai_chat")
     await bot.load_extension("mudae_a_pitusas")
     await bot.start(token)
 

@@ -13,8 +13,8 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s:%(levelname)s:%(name)s: %(message)s",
     handlers=[
-        logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'),
-        logging.StreamHandler()  # Esto también imprime en consola (opcional)
+        logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w'), # .log
+        logging.StreamHandler()  # imprime en consola
     ]
 )
 

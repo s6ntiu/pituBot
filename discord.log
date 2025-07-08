@@ -1,0 +1,9 @@
+# This is where the discord log goes
+
+
+2025-07-07 17:35:48,311:WARNING:discord.client: PyNaCl is not installed, voice will NOT be supported
+2025-07-07 17:35:49,277:INFO:discord.client: logging in using static token
+2025-07-07 17:35:50,581:INFO:discord.gateway: Shard ID None has connected to Gateway (Session ID: 02efeb7beed6c8b9e8576b560f9f2701).
+2025-07-07 17:35:54,194:INFO:root: Usuario aguszk registrado
+2025-07-07 19:48:07,638:INFO:discord.gateway: Shard ID None has successfully RESUMED session 02efeb7beed6c8b9e8576b560f9f2701.
+

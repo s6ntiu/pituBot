@@ -1,0 +1,5 @@
+discord.py
+python-dotenv~=1.1.1
+discord-py-interactions
+openai~=1.93.0
+asyncio~=3.4.3

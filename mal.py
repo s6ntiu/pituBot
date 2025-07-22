@@ -18,7 +18,7 @@ def buscar_anime(nombre):
     params = {
         'q': nombre,
         'limit': 1,
-        'fields': 'id,title,main_picture,synopsis,mean,rank,genres,start_date'
+        'fields': 'id,title,main_picture,synopsis,mean,rank,genres,start_date,num_list_users'
     }
     response = requests.get(url, headers=headers, params=params)
     if response.status_code != 200:
@@ -48,6 +48,7 @@ async def setup(bot):
         embed.add_field(name='Rank', value=str(anime.get('rank', 'N/A')), inline=True)
         embed.add_field(name='Genres', value=generos if generos else 'N/A', inline=True)
         embed.add_field(name='Start Date', value=str(anime.get('start_date', 'N/A')), inline=True)
+        embed.add_field(name='Members', value=str(anime.get('num_list_users', 'N/A')), inline=True)
         embed.set_footer(text="Información de myanimelist.net")
 
         await ctx.send(embed=embed)

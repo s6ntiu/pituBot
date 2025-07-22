@@ -41,7 +41,9 @@ async def on_ready():
 async def main():
     await bot.load_extension("mistralai_chat")
     await bot.load_extension("mudae_a_pitusas")
+    await bot.load_extension("mal")
     await bot.start(token)
+
 
 asyncio.run(main())
 

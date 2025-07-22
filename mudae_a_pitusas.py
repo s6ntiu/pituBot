@@ -4,7 +4,9 @@ import random
 import mysql.connector
 from discord.ext import commands
 import logging
+from dotenv import load_dotenv
 
+load_dotenv()
 logging.basicConfig(
     filename="discord.log",
     level=logging.INFO,

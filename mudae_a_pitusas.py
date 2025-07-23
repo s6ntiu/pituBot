@@ -133,7 +133,7 @@ async def setup(bot):
 
     # Agregar carta
     @bot.command()
-    async def agregarcarta(ctx, nombre: str, imagen_url: str, serie: str):
+    async def addcard(ctx, nombre: str, imagen_url: str, serie: str):
         try:
             # Verificar si ya existe una carta con ese nombre
             cursor.execute("SELECT * FROM cartas WHERE name = %s", (nombre,))

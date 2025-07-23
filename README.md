@@ -7,7 +7,7 @@ This bot is not meant to be integrated anywhere. It is open source just for me t
 
 **OPENROUTER_API_KEY**: *this is where your Openrouter API key goes*. Needed to run mistralai_chat.
 
-**SQL_PASSWORD**: *this is where your SQL password goes*. Needed to run sm command.
+**SQL_PASSWORD**: *this is where your SQL password goes*. Needed to run the "m" command. You would also need to manually set the characters and their pictures. You can do so via the  "addcard" command
 
 **MAL_CLIENT_ID**: *this is where your MyAnimeList client ID goes*. Needed to run mal.
 

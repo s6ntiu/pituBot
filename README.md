@@ -1,7 +1,7 @@
 **PituBot** is a multifunctional bot, it has many useless functions you can try.
 This bot is not meant to be integrated anywhere. It is open source just for me to document my learning journey on Python.
 
-**If you desire to import it, to make use of it you would need to create the following environment variables:**
+**If you desire to import it, to make use of it you would need to create the following environment variables on a .env file:**
 
 **DISCORD_TOKEN**: *this is where your bot token goes*. Needed to run the bot.
 

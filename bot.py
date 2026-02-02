@@ -42,6 +42,7 @@ async def main():
     await bot.load_extension("mistralai_chat")
     await bot.load_extension("mudae_a_pitusas")
     await bot.load_extension("mal")
+    await bot.load_extension("pc_onepiece")  
     await bot.start(token)
 
 

@@ -1,0 +1,185 @@
+import discord
+from discord.ext import commands
+import aiohttp
+from bs4 import BeautifulSoup
+import logging
+import asyncio
+import re
+
+logger = logging.getLogger('OnePiece_Search')
+
+async def setup(bot):
+    
+    @bot.command()
+    @commands.cooldown(1, 5, commands.BucketType.user) 
+    async def op(ctx, *, busqueda: str):
+        
+        msg = await ctx.send(f"Buscando la mejor oferta en ingles para: {busqueda}...")
+        
+        base_url = "https://www.pricecharting.com"
+        search_url = f"{base_url}/search-products?q={busqueda.replace(' ', '+')}&type=prices"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                # Único Request necesario (Más velocidad)
+                async with session.get(search_url, headers=headers) as response:
+                    if response.status != 200:
+                        await msg.edit(content="Error conectando con PriceCharting.")
+                        return
+                    
+                    html_text = await response.text()
+                    soup = BeautifulSoup(html_text, 'html.parser')
+                    
+                    product_list = soup.find('table', {'id': 'games_table'})
+                    
+                    best_match = None
+                    lowest_price = float('inf')
+                    found_any_english = False
+
+                    # --- LÓGICA PRINCIPAL ---
+                    if product_list:
+                        rows = product_list.find('tbody').find_all('tr')
+                        
+                        for row in rows:
+                            # 1. Filtro Japonés
+                            set_cell = row.find('td', class_='console')
+                            if not set_cell: continue
+                            
+                            set_name = set_cell.text.strip()
+                            if "Japanese" in set_name or "japanese" in set_name:
+                                continue
+
+                            found_any_english = True
+
+                            # 2. Datos y FOTO
+                            title_cell = row.find('td', class_='title')
+                            if not title_cell: continue
+                            
+                            link_tag = title_cell.find('a')
+                            title_text = link_tag.text.strip()
+                            href = link_tag['href']
+                            
+                            # --- EXTRACCIÓN DE FOTO DESDE LA LISTA ---
+                            # Buscamos la etiqueta img dentro de la fila
+                            photo_url = ""
+                            img_tag = row.find('img')
+                            if img_tag:
+                                photo_url = img_tag.get('src', '')
+                            
+                            # 3. Precio
+                            price_text = "N/A"
+                            price_value = float('inf')
+                            
+                            price_cells = row.find_all('td', class_='price')
+                            for cell in price_cells:
+                                text = cell.get_text(strip=True)
+                                if '$' in text:
+                                    clean_price = re.sub(r'[^\d.]', '', text)
+                                    try:
+                                        val = float(clean_price)
+                                        if val < price_value and val > 0:
+                                            price_value = val
+                                            price_text = text
+                                    except:
+                                        continue
+                            
+                            # 4. (Más barato)
+                            if price_value < lowest_price:
+                                lowest_price = price_value
+                                
+                                full_link = href if href.startswith("http") else f"{base_url}{href}"
+                                
+                                best_match = {
+                                    'title': title_text,
+                                    'set': set_name,
+                                    'url': full_link,
+                                    'price': price_text,
+                                    'photo': photo_url  # Guardamos la foto aquí
+                                }
+
+                    # --- PREPARACIÓN DE RESULTADOS ---
+                    final_title = ""
+                    final_price = ""
+                    final_set = ""
+                    target_url = ""
+                    image_to_show = ""
+
+                    if best_match:
+                        target_url = best_match['url']
+                        final_title = best_match['title']
+                        final_price = best_match['price']
+                        final_set = best_match['set']
+                        
+                        # --- EL TRUCO DEL USUARIO (ZOOM) ---
+                        raw_photo = best_match['photo']
+                        if raw_photo:
+                            # Si es relativa (empieza con /), la arreglamos
+                            if not raw_photo.startswith("http"):
+                                raw_photo = f"{base_url}{raw_photo}"
+                            
+                            # Aplicamos el hack de resolución: 60 -> 240
+                            if "60.jpg" in raw_photo:
+                                image_to_show = raw_photo.replace("60.jpg", "240.jpg")
+                            else:
+                                image_to_show = raw_photo
+
+                    # Caso B: Redirección directa (raro pero posible)
+                    elif soup.find('td', {'id': 'price_data_ungraded'}):
+                        target_url = str(response.url)
+                        h1_title = soup.find('h1').text.strip() if soup.find('h1') else busqueda.upper()
+                        
+                        if "Japanese" in h1_title:
+                             await msg.edit(content=f"Solo encontré la versión japonesa para: {busqueda}")
+                             return
+
+                        final_title = h1_title
+                        final_set = "One Piece TCG"
+                        
+                        price_cell = soup.find('td', {'id': 'price_data_ungraded'})
+                        final_price = price_cell.find('span', class_='price').text.strip() if price_cell else "N/A"
+                        
+                        # Intentamos sacar la foto del producto si caemos aquí
+                        image_div = soup.find('div', class_='cover_image')
+                        if image_div and image_div.find('img'):
+                            image_to_show = image_div.find('img')['src']
+
+                    else:
+                        if product_list and not found_any_english:
+                            await msg.edit(content=f"Solo encontré versiones japonesas para: {busqueda}")
+                        else:
+                            await msg.edit(content=f"No encontré resultados para: {busqueda}")
+                        return
+
+                    # --- EMBED FINAL ---
+                    embed = discord.Embed(
+                        title=final_title,
+                        url=target_url,
+                        description=f"Mejor precio encontrado (EN ver.)",
+                        color=discord.Color.dark_red()
+                    )
+
+                    if image_to_show:
+                        embed.set_image(url=image_to_show)
+
+                    embed.add_field(name="Coleccion", value=final_set, inline=True)
+                    embed.add_field(name="Precio", value=f"**{final_price}**", inline=True)
+                    embed.set_footer(text="PriceCharting | One Piece TCG")
+
+                    await msg.edit(content=None, embed=embed)
+
+            except Exception as e:
+                logger.error(f"Error scraping: {e}")
+                print(f"ERROR: {e}") 
+                await msg.edit(content=f"Ocurrió un error interno.")
+
+    @op.error
+    async def op_error(ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"Espera {error.retry_after:.1f} segundos.")
+        else:
+            raise error
